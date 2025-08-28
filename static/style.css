@@ -1,0 +1,892 @@
+/* Outlook风格的邮件管理系统样式 */
+
+/* 基础样式重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* 主容器 */
+.outlook-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* 顶部导航栏 */
+.outlook-header {
+    background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+    color: white;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+    padding: 8px 0;
+}
+
+/* 顶部导航栏邮箱输入样式 */
+.email-input-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.email-input-section .input-group {
+    max-width: 600px;
+    width: 100%;
+}
+
+.email-input-section .form-control {
+    border-radius: 6px 0 0 6px;
+    border: 1px solid #d1d9e0;
+    padding: 8px 12px;
+    font-size: 14px;
+    min-width: 200px;
+}
+
+.email-input-section .form-control:focus {
+    border-color: #ffffff;
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.3);
+}
+
+.email-input-section .btn {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid #ffffff;
+    white-space: nowrap;
+}
+
+.email-input-section .btn:first-of-type {
+    border-radius: 0 6px 6px 0;
+}
+
+.email-input-section .btn:hover {
+    background: #f8f9fa;
+    color: #0078d4;
+}
+
+.email-input-section .btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border-color: #ffffff;
+}
+
+/* 邮件统计信息样式 */
+.email-stats {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* 主要内容区域 */
+.outlook-main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* 邮件列表区域 */
+.outlook-maillist {
+    width: 450px;
+    background: white;
+    border-right: 1px solid #e1e5e9;
+    display: flex;
+    flex-direction: column;
+}
+
+.maillist-header {
+    padding: 20px;
+    border-bottom: 1px solid #e1e5e9;
+    background: #f8f9fa;
+}
+
+.maillist-header h6 {
+    color: #323130;
+    font-weight: 600;
+}
+
+.maillist-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* 邮件列表项 */
+.email-list {
+    padding: 0;
+}
+
+.email-item {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f3f2f1;
+    cursor: pointer;
+    background: white;
+}
+
+.email-item:hover {
+    background: #f8f9fa;
+    border-left: 3px solid #0078d4;
+}
+
+.email-item.selected {
+    background: #deecf9;
+    border-left: 3px solid #0078d4;
+}
+
+.email-item:last-child {
+    border-bottom: none;
+}
+
+.email-sender {
+    font-weight: 600;
+    color: #323130;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.email-subject {
+    color: #605e5c;
+    font-size: 14px;
+    margin-bottom: 4px;
+    line-height: 1.3;
+}
+
+.email-preview {
+    color: #8a8886;
+    font-size: 13px;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.email-time {
+    color: #8a8886;
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+/* 邮件详情区域 */
+.outlook-detail {
+    flex: 1;
+    background: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-header {
+    padding: 20px;
+    border-bottom: 1px solid #e1e5e9;
+    background: #f8f9fa;
+}
+
+.detail-header h6 {
+    color: #323130;
+    font-weight: 600;
+}
+
+.detail-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+/* 邮件详情样式 */
+.email-detail-header {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e1e5e9;
+}
+
+.email-detail-subject {
+    font-size: 20px;
+    font-weight: 600;
+    color: #323130;
+    margin-bottom: 12px;
+    line-height: 1.3;
+}
+
+.email-detail-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.email-detail-meta .meta-row {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+}
+
+.email-detail-meta .meta-label {
+    color: #8a8886;
+    font-weight: 600;
+    min-width: 60px;
+    margin-right: 12px;
+}
+
+.email-detail-meta .meta-value {
+    color: #323130;
+}
+
+.email-detail-body {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #323130;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin-top: 12px;
+}
+
+/* 空状态样式 */
+.empty-state, .empty-detail {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    padding: 32px 16px;
+}
+
+.empty-state h6, .empty-detail h6 {
+    color: #605e5c;
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.empty-state p, .empty-detail p {
+    color: #8a8886;
+    font-size: 14px;
+    margin-bottom: 0;
+}
+
+.empty-state i, .empty-detail i {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+/* 加载状态 */
+.loading-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+}
+
+/* 邮件内容HTML渲染样式 */
+.email-detail-body.html-content {
+    /* 重置默认样式 */
+    line-height: 1.5;
+    color: #323130;
+    margin: 0;
+    padding: 0;
+}
+
+.email-detail-body.html-content * {
+    max-width: 100%;
+    word-wrap: break-word;
+}
+
+.email-detail-body.html-content p {
+    margin: 8px 0;
+}
+
+.email-detail-body.html-content div {
+    margin: 4px 0;
+}
+
+.email-detail-body.html-content img {
+    max-width: 100%;
+    height: auto;
+    margin: 8px 0;
+}
+
+.email-detail-body.html-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+}
+
+.email-detail-body.html-content td,
+.email-detail-body.html-content th {
+    padding: 6px 8px;
+    border: 1px solid #e1e5e9;
+    font-size: 13px;
+}
+
+/* 清理邮件内容中可能存在的过大边距 */
+.email-detail-body.html-content br {
+    line-height: 1.2;
+}
+
+/* 针对验证码类型邮件的优化 */
+.email-detail-body.html-content center {
+    margin: 8px 0;
+}
+
+.email-detail-body.html-content > div:empty {
+    display: none;
+}
+
+.email-detail-body.html-content > p:empty {
+    display: none;
+}
+
+.email-detail-body.html-content .verification-code {
+    font-weight: bold;
+    font-size: 16px;
+    color: #0078d4;
+    padding: 8px 12px;
+    background: #f3f9ff;
+    border-radius: 4px;
+    display: inline-block;
+    margin: 8px 0;
+}
+
+/* 缩小多余的空白 */
+.email-detail-body.html-content > div > div:empty {
+    display: none;
+}
+
+.email-detail-body.html-content table[cellpadding] {
+    border-spacing: 0;
+}
+
+.email-detail-body.html-content table[cellpadding] td {
+    padding: 4px 8px;
+}
+
+.email-detail-body.html-content h1,
+.email-detail-body.html-content h2,
+.email-detail-body.html-content h3,
+.email-detail-body.html-content h4,
+.email-detail-body.html-content h5,
+.email-detail-body.html-content h6 {
+    margin: 12px 0 8px 0;
+    line-height: 1.3;
+}
+
+.email-detail-body.html-content ul,
+.email-detail-body.html-content ol {
+    margin: 8px 0;
+    padding-left: 24px;
+}
+
+.email-detail-body.html-content li {
+    margin: 4px 0;
+}
+
+/* iframe容器样式 - 用于隔离邮件CSS样式 */
+.email-detail-body.iframe-container {
+    margin: 0;
+    padding: 0;
+    border: 1px solid #e1e5e9;
+    border-radius: 4px;
+    overflow: hidden;
+    background: white;
+}
+
+.email-iframe {
+    width: 100%;
+    min-height: 200px;
+    height: 400px; /* 默认高度，将会被JavaScript动态调整 */
+    border: none;
+    background: white;
+    display: block;
+}
+
+/* 文本内容样式 */
+.email-detail-body.text-content {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #323130;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin-top: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #e1e5e9;
+}
+
+/* 降级处理样式 - 当iframe失败时使用 */
+.email-detail-body.html-content.fallback {
+    padding: 12px;
+    border: 1px solid #e1e5e9;
+    border-radius: 4px;
+    background: white;
+    /* 使用Shadow DOM样式隔离的替代方案 */
+    isolation: isolate;
+    contain: layout style;
+}
+
+/* 桌面端样式确保输入框正常显示 - 强化版本 */
+@media (min-width: 769px) {
+    /* 桌面端完全隐藏移动端sidebar组件 */
+    .mobile-sidebar,
+    .mobile-sidebar-overlay,
+    #mobileSidebarToggle {
+        display: none !important;
+    }
+    
+    .outlook-header {
+        min-height: 60px !important;
+    }
+    
+    .outlook-header .d-flex {
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+    
+    .email-input-section {
+        display: flex !important;
+        visibility: visible !important;
+        order: unset !important;
+        flex-direction: row !important;
+        gap: 12px !important;
+        width: auto !important;
+        flex: 1 !important;
+        max-width: 100% !important;
+        flex-shrink: 0 !important;
+        min-width: 300px !important;
+    }
+    
+    .email-input-section .input-group {
+        display: flex !important;
+        visibility: visible !important;
+        min-width: 300px !important;
+        flex: 1 !important;
+        max-width: 600px !important;
+    }
+    
+    .email-input-section .form-control {
+        display: block !important;
+        visibility: visible !important;
+        min-width: 200px !important;
+        opacity: 1 !important;
+    }
+    
+    .email-input-section .btn {
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .email-stats {
+        order: unset !important;
+        margin-left: auto !important;
+        margin-bottom: 0 !important;
+        flex-shrink: 0 !important;
+        display: flex !important;
+        visibility: visible !important;
+    }
+    
+    /* 确保主内容区域正确布局 */
+    .outlook-main {
+        flex-direction: row !important;
+        height: calc(100vh - 60px) !important;
+    }
+    
+    .outlook-maillist {
+        width: 450px !important;
+        height: auto !important;
+        border-right: 1px solid #e1e5e9 !important;
+        border-bottom: none !important;
+    }
+    
+    /* 桌面端显示邮件列表和详情标题 */
+    .outlook-maillist .maillist-header,
+    .outlook-detail .detail-header {
+        display: block !important;
+    }
+    
+    .outlook-detail {
+        flex: 1 !important;
+        width: auto !important;
+        height: auto !important;
+        min-height: auto !important;
+    }
+    
+    .detail-content {
+        overflow-y: auto !important;
+        max-height: none !important;
+        height: auto !important;
+    }
+}
+
+/* 响应式设计 - 优化移动端滚动体验 */
+@media (max-width: 768px) {
+    .outlook-header {
+        min-height: 70px;
+        padding: 8px 0;
+    }
+    
+    .outlook-header .container-fluid {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+    
+    .email-input-section .input-group {
+        max-width: 100% !important;
+    }
+    
+    .email-input-section .form-control {
+        font-size: 16px; /* 防止iOS缩放 */
+    }
+    
+    /* 移动端布局调整 */
+    .outlook-main {
+        flex-direction: column;
+        height: calc(100vh - 70px); /* 减去头部高度 */
+        overflow: hidden; /* 防止整体滚动 */
+    }
+    
+    /* 移动端隐藏桌面端邮件列表 */
+    .outlook-maillist {
+        display: none;
+    }
+    
+    .outlook-detail {
+        width: 100%;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0; /* 关键：允许Flex子元素缩小 */
+        overflow: hidden; /* 防止溢出 */
+    }
+    
+    .detail-header {
+        flex-shrink: 0; /* 头部不缩小 */
+        padding: 20px;
+        border-bottom: 1px solid #e1e5e9;
+        background: #f8f9fa;
+        display: none; /* 移动端隐藏邮件详情标题 */
+    }
+    
+    .detail-content {
+        flex: 1;
+        overflow-y: auto !important;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch; /* iOS平滑滚动 */
+        padding: 16px;
+        /* 移除max-height限制，让flex处理高度 */
+        min-height: 0; /* 关键：允许内容缩小 */
+    }
+    
+    /* 隐藏在移动端不必要的文本 */
+    .d-none.d-md-inline,
+    .d-none.d-lg-inline,
+    .d-none.d-xl-inline {
+        display: none !important;
+    }
+    
+    /* 移动端侧边栏样式 */
+    .mobile-sidebar {
+        position: fixed;
+        top: 0;
+        left: -320px;
+        width: 320px;
+        height: 100vh;
+        background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+        z-index: 9999;
+        transition: left 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+    }
+    
+    .mobile-sidebar.open {
+        left: 0;
+    }
+    
+    .mobile-sidebar-header {
+        padding: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+        flex-shrink: 0;
+    }
+    
+    .mobile-sidebar-content {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+    }
+    
+    .mobile-email-input-section {
+        margin-bottom: 20px;
+    }
+    
+    .mobile-email-input-section .form-label {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+    
+    .mobile-email-input-section .form-control {
+        border-radius: 6px 0 0 6px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        font-size: 16px;
+    }
+    
+    .mobile-email-input-section .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .mobile-email-input-section .form-control:focus {
+        border-color: white;
+        box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .mobile-email-input-section .btn {
+        border-radius: 0 6px 6px 0;
+        border: 1px solid white;
+    }
+    
+    .mobile-temp-account-section {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .mobile-temp-account-section .btn {
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        color: white;
+    }
+    
+    .mobile-temp-account-section .btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: white;
+    }
+    
+    /* 移动端邮件列表样式 */
+    .mobile-maillist {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+    
+    .mobile-maillist-header {
+        flex-shrink: 0;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .mobile-email-list {
+        flex: 1;
+        overflow-y: auto;
+        padding-top: 10px;
+        max-height: 50vh; /* 限制高度，确保其他内容可见 */
+    }
+    
+    .mobile-email-list .email-item {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        margin-bottom: 8px;
+        padding: 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .mobile-email-list .email-item:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+    
+    .mobile-email-list .email-item.selected {
+        background: rgba(255, 255, 255, 0.25);
+        border-color: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .mobile-email-list .email-sender {
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+    
+    .mobile-email-list .email-subject {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 4px;
+        line-height: 1.3;
+    }
+    
+    .mobile-email-list .email-preview {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        line-height: 1.3;
+        margin-bottom: 6px;
+    }
+    
+    .mobile-email-list .email-time {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 11px;
+        text-align: right;
+    }
+    
+    /* 移动端顶部邮件统计样式 */
+    .mobile-email-stats {
+        /* 样式在顶部栏中定义 */
+    }
+    
+    .mobile-sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9998;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .mobile-sidebar-overlay.show {
+        display: block;
+        opacity: 1;
+    }
+    
+    /* 移动端菜单按钮样式 */
+    #mobileSidebarToggle {
+        padding: 8px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        color: white;
+    }
+    
+    #mobileSidebarToggle:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: white;
+    }
+    
+    /* 关闭按钮样式 */
+    #closeSidebar {
+        padding: 4px 8px;
+        font-size: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    
+    #closeSidebar:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: white;
+    }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 480px) {
+    .outlook-header {
+        min-height: 80px;
+    }
+    
+    .outlook-main {
+        height: calc(100vh - 80px); /* 适应更高的头部 */
+    }
+    
+    .email-input-section .btn {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+    
+    .email-stats {
+        font-size: 11px;
+    }
+    
+    .email-stats .badge {
+        font-size: 10px;
+        padding: 2px 6px;
+    }
+    
+    /* 确保小屏幕下邮件详情能正常滚动 */
+    .detail-content {
+        padding: 12px; /* 减少内边距以节省空间 */
+    }
+    
+    .email-detail-header {
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+    }
+    
+    .email-detail-subject {
+        font-size: 18px; /* 稍微减小标题大小 */
+        margin-bottom: 8px;
+    }
+}
+
+/* 滚动条样式 */
+.maillist-content::-webkit-scrollbar,
+.detail-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.maillist-content::-webkit-scrollbar-track,
+.detail-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.maillist-content::-webkit-scrollbar-thumb,
+.detail-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.maillist-content::-webkit-scrollbar-thumb:hover,
+.detail-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 动画效果 */
+.email-item,
+.stats-card,
+.sidebar-actions {
+    animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 模态框样式调整 */
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
+
+.modal-header {
+    padding: 24px 24px 0;
+}
+
+.modal-body {
+    padding: 16px 24px;
+}
+
+.modal-footer {
+    padding: 0 24px 24px;
+}

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outlook邮件管理系统</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.13.1/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <div class="outlook-container">
+        <!-- 移动端可折叠侧边栏 -->
+        <div class="mobile-sidebar" id="mobileSidebar">
+            <div class="mobile-sidebar-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-inbox me-2"></i>
+                    收件箱
+                </h6>
+                <button class="btn btn-sm btn-outline-light" id="closeSidebar">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="mobile-sidebar-content">
+                <!-- 邮箱输入区域 -->
+                <div class="mobile-email-input-section">
+                    <form id="mobileEmailForm" class="w-100">
+                        <div class="mb-3">
+                            <label for="mobileEmailInput" class="form-label text-white-50">
+                                <i class="bi bi-envelope me-1"></i>邮箱地址
+                            </label>
+                            <div class="input-group">
+                                <input type="email" class="form-control" 
+                                       id="mobileEmailInput" placeholder="输入邮箱地址" required>
+                                <button type="submit" class="btn btn-light">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- 临时账户按钮 -->
+                <div class="mobile-temp-account-section">
+                    <button type="button" class="btn btn-outline-light w-100" id="mobileTempAccountBtn">
+                        <i class="bi bi-person-plus me-2"></i>
+                        使用临时账户
+                    </button>
+                </div>
+                
+                <!-- 移动端邮件列表 -->
+                <div class="mobile-maillist mt-4">
+                    <div class="mobile-maillist-header mb-3">
+                        <h6 class="text-white-50 mb-0">
+                            <i class="bi bi-envelope-open me-2"></i>
+                            邮件列表
+                        </h6>
+                    </div>
+                    
+                    <!-- 移动端加载中 -->
+                    <div id="mobileLoadingEmails" class="loading-state text-center" style="display: none;">
+                        <div class="spinner-border spinner-border-sm text-light" role="status">
+                            <span class="visually-hidden">加载中...</span>
+                        </div>
+                        <div class="mt-2 text-white-50 small">正在获取邮件列表...</div>
+                    </div>
+
+                    <!-- 移动端邮件列表 -->
+                    <div id="mobileEmailList" class="mobile-email-list">
+                        <div class="empty-state text-center py-4">
+                            <i class="bi bi-inbox text-white-50 fs-1"></i>
+                            <div class="mt-3 text-white-50">
+                                <div class="fw-bold">输入邮箱查看邮件</div>
+                                <p class="small mb-0 mt-1">请在上方输入邮箱地址</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 移动端遮罩层 -->
+        <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay"></div>
+        
+        <!-- 顶部导航栏 -->
+        <nav class="outlook-header">
+            <div class="container-fluid px-3">
+                <div class="row align-items-center w-100">
+                    <!-- 品牌标识和移动端菜单按钮 -->
+                    <div class="col-auto">
+                        <div class="d-flex align-items-center">
+                            <!-- 移动端菜单按钮 -->
+                            <button class="btn btn-outline-light me-2 d-md-none" id="mobileSidebarToggle">
+                                <i class="bi bi-list"></i>
+                            </button>
+                            <i class="bi bi-microsoft text-white me-2 fs-4"></i>
+                            <span class="fw-bold text-white fs-5 d-none d-md-inline">Outlook 邮件管理系统</span>
+                            <span class="fw-bold text-white d-md-none">Outlook</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 移动端邮件统计信息 -->
+                    <div class="col-auto d-md-none">
+                        <div id="mobileEmailStats" class="mobile-email-stats" style="display: none;">
+                            <div class="d-flex align-items-center text-white">
+                                <div class="text-end me-2">
+                                    <div id="mobileCurrentEmailText" class="small fw-bold" style="font-size: 0.75rem;"></div>
+                                    <div class="d-flex align-items-center justify-content-end">
+                                        <span class="badge bg-light text-primary me-1" id="mobileTotalEmails">0</span>
+                                        <span class="small" style="font-size: 0.7rem;">封邮件</span>
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline-light btn-sm" id="mobileRefreshBtn" style="display: none; padding: 0.2rem 0.4rem;">
+                                    <i class="bi bi-arrow-clockwise" style="font-size: 0.8rem;"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 桌面端邮箱输入区域 -->
+                    <div class="col d-none d-md-block">
+                        <div class="email-input-section">
+                            <form id="emailForm" class="w-100">
+                                <div class="input-group mx-auto" style="max-width: 600px;">
+                                    <input type="email" class="form-control bg-white border-0" 
+                                           id="emailInput" placeholder="输入邮箱地址" required>
+                                    <button type="submit" class="btn btn-light">
+                                        <i class="bi bi-search"></i>
+                                        <span class="ms-1 d-none d-lg-inline">获取邮件</span>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-light ms-2" id="tempAccountBtn" title="使用临时账户">
+                                        <i class="bi bi-person-plus"></i>
+                                        <span class="ms-1 d-none d-xl-inline">临时账户</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- 桌面端邮件统计信息 -->
+                    <div class="col-auto d-none d-md-block">
+                        <div id="emailStats" class="email-stats" style="display: none;">
+                            <div class="d-flex align-items-center text-white-50">
+                                <span class="small me-2 d-none d-lg-inline">当前邮箱:</span>
+                                <span id="currentEmailText" class="text-white small"></span>
+                                <span class="badge bg-light text-primary ms-2" id="totalEmails">0</span>
+                                <button class="btn btn-outline-light btn-sm ms-2" id="refreshBtn" style="display: none;">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="outlook-main">
+            <!-- 桌面端邮件列表区域 -->
+            <div class="outlook-maillist d-none d-md-block">
+                <div class="maillist-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-inbox me-2"></i>
+                        收件箱
+                    </h6>
+                </div>
+                
+                <div class="maillist-content">
+                    <!-- 加载中 -->
+                    <div id="loadingEmails" class="loading-state" style="display: none;">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">加载中...</span>
+                            </div>
+                            <div class="mt-2 text-muted">正在获取邮件列表...</div>
+                        </div>
+                    </div>
+
+                    <!-- 邮件列表 -->
+                    <div id="emailList" class="email-list">
+                        <div class="empty-state">
+                            <div class="text-center py-5">
+                                <i class="bi bi-inbox display-1 text-muted"></i>
+                                <div class="mt-3 text-muted">
+                                    <h6>欢迎使用邮件管理系统</h6>
+                                    <p class="small mb-0">请在顶部输入邮箱地址开始查看邮件</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 邮件详情区域 -->
+            <div class="outlook-detail">
+                <div class="detail-header d-none d-md-block">
+                    <h6 class="mb-0">
+                        <i class="bi bi-envelope-open me-2"></i>
+                        邮件详情
+                    </h6>
+                </div>
+                
+                <div class="detail-content">
+                    <div id="emailDetail" class="email-detail">
+                        <div class="empty-detail">
+                            <div class="text-center py-5">
+                                <i class="bi bi-envelope display-1 text-muted"></i>
+                                <div class="mt-3 text-muted">
+                                    <h6 class="d-none d-md-block">选择邮件查看详情</h6>
+                                    <h6 class="d-md-none">查看邮件详情</h6>
+                                    <p class="small mb-0 d-none d-md-block">点击左侧邮件列表中的邮件查看详细内容</p>
+                                    <p class="small mb-0 d-md-none">在侧边栏中选择邮件查看详细内容</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 错误提示模态框 -->
+    <div class="modal fade" id="errorModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        错误提示
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="errorMessage" class="mb-0"></p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 临时账户设置模态框 -->
+    <div class="modal fade" id="tempAccountModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-primary">
+                        <i class="bi bi-person-plus me-2"></i>临时账户设置
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>提示：</strong>临时账户信息仅在当前浏览器会话中有效，不会保存到服务器。
+                    </div>
+                    
+                    <form id="tempAccountForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="tempEmail" class="form-label">
+                                        <i class="bi bi-envelope me-1"></i>邮箱地址
+                                    </label>
+                                    <input type="email" class="form-control" id="tempEmail" 
+                                           placeholder="请输入邮箱地址" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="tempPassword" class="form-label">
+                                        <i class="bi bi-lock me-1"></i>密码（可选）
+                                    </label>
+                                    <input type="password" class="form-control" id="tempPassword" 
+                                           placeholder="请输入密码">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="tempClientId" class="form-label">
+                                <i class="bi bi-key me-1"></i>Client ID（可选）
+                            </label>
+                            <input type="text" class="form-control" id="tempClientId" 
+                                   placeholder="请输入Client ID（空白则使用默认值）">
+                            <div class="form-text">
+                                默认使用: dbc8e03a-b00c-46bd-ae65-b683e7707cb0
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="tempRefreshToken" class="form-label">
+                                <i class="bi bi-shield-lock me-1"></i>Refresh Token <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" id="tempRefreshToken" rows="3" 
+                                      placeholder="请输入Refresh Token" required></textarea>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-1"></i>取消
+                            </button>
+                            <div>
+                                <button type="button" class="btn btn-outline-danger me-2" id="clearTempAccountBtn">
+                                    <i class="bi bi-trash me-1"></i>清除临时账户
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle me-1"></i>保存并使用
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 成功提示模态框 -->
+    <div class="modal fade" id="successModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-success">
+                        <i class="bi bi-check-circle me-2"></i>
+                        操作成功
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="successMessage" class="mb-0"></p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据导入模态框 -->
+    <div class="modal fade" id="importModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-primary">
+                        <i class="bi bi-upload me-2"></i>
+                        批量导入邮箱账户
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- 导入方式选择 -->
+                    <div class="mb-3">
+                        <label class="form-label">导入方式</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="importType" id="importText" value="text" checked>
+                            <label class="btn btn-outline-primary" for="importText">
+                                <i class="bi bi-file-text me-1"></i>文本导入
+                            </label>
+                            <input type="radio" class="btn-check" name="importType" id="importFile" value="file">
+                            <label class="btn btn-outline-primary" for="importFile">
+                                <i class="bi bi-file-earmark-arrow-up me-1"></i>文件导入
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 文本导入区域 -->
+                    <div id="textImportArea">
+                        <div class="mb-3">
+                            <label for="importTextarea" class="form-label">账户数据</label>
+                            <textarea class="form-control" id="importTextarea" rows="8" 
+                                placeholder="格式：邮箱----密码----client_id----refresh_token
+每行一个账户，例：
+user1@example.com----password1----client_id----token1
+user2@example.com----password2----client_id----token2"></textarea>
+                            <div class="form-text">
+                                支持旧格式：邮箱----refresh_token
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 文件导入区域 -->
+                    <div id="fileImportArea" style="display: none;">
+                        <div class="mb-3">
+                            <label for="importFile" class="form-label">选择文件</label>
+                            <input type="file" class="form-control" id="importFileInput" accept=".txt,.csv">
+                            <div class="form-text">
+                                支持 .txt 和 .csv 文件格式
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 合并模式选择 -->
+                    <div class="mb-3">
+                        <label class="form-label">合并模式</label>
+                        <select class="form-select" id="mergeMode">
+                            <option value="update">更新模式：更新现有账户，新增不存在的账户</option>
+                            <option value="skip">跳过模式：保持现有账户不变，只新增不存在的账户</option>
+                            <option value="replace">替换模式：清空所有现有账户，使用导入数据</option>
+                        </select>
+                    </div>
+
+                    <!-- 预览区域 -->
+                    <div id="previewArea" style="display: none;">
+                        <h6>预览结果</h6>
+                        <div id="previewContent" class="border rounded p-3 bg-light" style="max-height: 300px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-info" id="previewBtn">预览</button>
+                    <button type="button" class="btn btn-primary" id="confirmImportBtn" disabled>确认导入</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 账户管理模态框 -->
+    <div class="modal fade" id="accountsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-primary">
+                        <i class="bi bi-people me-2"></i>
+                        账户管理
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- 操作按钮组 -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">已配置账户</h6>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-success" id="addAccountBtn">
+                                <i class="bi bi-plus-circle me-1"></i>新增账户
+                            </button>
+                            <button type="button" class="btn btn-sm btn-info" id="exportTxtBtn">
+                                <i class="bi bi-download me-1"></i>导出TXT
+                            </button>
+                            <button type="button" class="btn btn-sm btn-secondary" id="exportJsonBtn">
+                                <i class="bi bi-file-earmark-code me-1"></i>导出JSON
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="refreshAccountsBtn">
+                                <i class="bi bi-arrow-clockwise me-1"></i>刷新
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 账户列表 -->
+                    <div id="accountsList" class="border rounded" style="max-height: 500px; overflow-y: auto;">
+                        <div class="text-center text-muted p-4">
+                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                            <div class="mt-2">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增/编辑账户模态框 -->
+    <div class="modal fade" id="accountFormModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-primary">
+                        <i class="bi bi-person-plus me-2"></i>
+                        <span id="accountFormTitle">新增账户</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="accountForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="originalEmail" value="">
+                        
+                        <div class="mb-3">
+                            <label for="accountEmail" class="form-label">邮箱地址 *</label>
+                            <input type="email" class="form-control" id="accountEmail" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="accountPassword" class="form-label">密码</label>
+                            <input type="password" class="form-control" id="accountPassword">
+                            <div class="form-text">可选，用于备注和记录</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="accountRefreshToken" class="form-label">Refresh Token *</label>
+                            <textarea class="form-control" id="accountRefreshToken" rows="4" required></textarea>
+                            <div class="form-text">必填，用于邮件访问认证</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

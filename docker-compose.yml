@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  outlook-mail-system:
+    build: .
+    container_name: outlook-mail-automation
+    ports:
+      - "5000:5000"
+    volumes:
+      # 挂载配置文件，便于修改邮箱配置
+      - ./config.txt:/app/config.txt
+      # 可选：挂载日志目录
+      - ./logs:/app/logs
+    environment:
+      # 管理员令牌，可以通过环境变量设置
+      - ADMIN_TOKEN=${ADMIN_TOKEN:-admin123}
+      # 可选：设置时区
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - outlook-mail-network
+
+networks:
+  outlook-mail-network:
+    driver: bridge
