@@ -205,7 +205,20 @@ class AdminManager {
     }
 
     async testAccount(email) {
+        // 获取按钮元素
+        const testButton = document.querySelector(`button[onclick="adminManager.testAccount('${email}')"]`);
+        const originalButtonContent = testButton.innerHTML;
+        
         try {
+            // 显示加载动画
+            testButton.disabled = true;
+            testButton.innerHTML = `
+                <span class="spinner-border spinner-border-sm me-1" role="status">
+                    <span class="visually-hidden">正在测试...</span>
+                </span>
+                测试中...
+            `;
+            
             const response = await fetch(`/api/messages?email=${encodeURIComponent(email)}&top=1`, {
                 headers: {
                     'Authorization': `Bearer ${this.token}`
@@ -225,6 +238,10 @@ class AdminManager {
         } catch (error) {
             console.error('测试账号失败:', error);
             this.showError(`账号 ${email} 测试失败: ${error.message}`);
+        } finally {
+            // 恢复按钮状态
+            testButton.disabled = false;
+            testButton.innerHTML = originalButtonContent;
         }
     }
 

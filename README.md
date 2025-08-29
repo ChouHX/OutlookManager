@@ -1,31 +1,53 @@
-# Outlook邮件自动化管理系统
+# Outlook 邮件管理系统
 
-## 项目简介
+基于 FastAPI 的 Outlook 邮件系统，支持多账户管理和邮件获取，支持移动端显示，支持批量导入导出以及账号测试。
 
-这是一个改进版的Outlook邮件自动化管理系统，支持批量账户管理和前端界面操作。主要特性包括：
+![alt text](static/image.png)
 
-- **批量账户导入**: 支持从配置文件批量导入多个邮箱账户
-- **Web前端界面**: 提供现代化的Web界面进行邮件管理
-- **邮箱验证**: 输入邮箱地址验证是否存在于配置中
-- **邮件列表查看**: 获取并显示指定邮箱的邮件列表
-- **邮件详情查看**: 点击邮件查看详细内容
-- **无需重新获取token**: 使用预配置的refresh_token，无需手动授权
+![alt text](static/image2.png)
 
-## 系统架构
+![alt text](static/image3.png)
+
+![alt text](static/image4.png)
+
+## 目录结构
 
 ```
-outlook-mail-automation-main/
-├── mail_api.py          # 主程序文件（后端API + 命令行）
-├── config.txt           # 批量账户配置文件
-├── requirements.txt     # Python依赖包
-├── static/              # 前端静态文件
-│   ├── index.html      # 主页面
-│   ├── style.css       # 样式文件
-│   └── script.js       # 交互逻辑
-└── README.md           # 使用说明（本文件）
+.
+├── static/                 # 前端静态文件
+│   ├── admin.html          # 管理页面
+│   ├── admin.js            # 管理页面脚本
+│   ├── index.html          # 主页面
+│   ├── script.js           # 主页面脚本
+│   └── style.css           # 样式文件
+├── config.txt              # 邮箱账户配置文件
+├── mail_api.py             # 主程序文件
+├── get_refresh_token.py    # 获取刷新令牌工具
+├── requirements.txt        # Python依赖包
+├── Dockerfile              # Docker镜像构建文件
+├── docker-compose.yml      # Docker容器编排配置
+├── deploy.sh               # 自动化部署脚本
+└── README.md               # 项目说明文档
 ```
 
-## 安装配置
+## 配置文件
+
+### config.txt 格式
+
+```
+# 批量邮箱账户配置文件
+# 格式：用户名----密码----client_id----refresh_token
+# 每行一个账户，用----分隔各字段
+user@example.com----password123----your_client_id----refresh_token_here
+```
+
+**重要说明：**
+- 每行代表一个邮箱账户
+- 字段间使用四个连字符 `----` 分隔
+- 支持注释行（以#开头）和空行
+- 需要提前获取每个账户的 refresh_token
+
+## 本地部署
 
 ### 1. 安装依赖
 
@@ -35,161 +57,86 @@ pip install -r requirements.txt
 
 ### 2. 配置邮箱账户
 
-编辑 `config.txt` 文件，按以下格式添加邮箱账户：
+编辑 `config.txt` 文件，添加邮箱账户信息。
 
-```
-# 批量邮箱账户配置文件
-# 格式：用户名----密码----client_id----refresh_token
-# 每行一个账户，用----分隔各字段
+### 3. 启动服务
 
-user1@outlook.com----password123----your_client_id_1----your_refresh_token_1
-user2@hotmail.com----password456----your_client_id_2----your_refresh_token_2
-```
-
-**重要说明：**
-- 每行代表一个邮箱账户
-- 字段间使用四个连字符 `----` 分隔
-- 需要提前获取每个账户的 `client_id` 和 `refresh_token`
-- 支持注释行（以#开头）和空行
-
-## 使用方法
-
-### Web界面模式（推荐）
-
-1. 启动Web服务器：
 ```bash
 python mail_api.py web
 ```
 
-2. 打开浏览器访问：`http://localhost:5000`
+访问 http://localhost:5000 查看前端界面。
 
-3. 在前端界面中：
-   - **输入邮箱地址** → 点击"验证邮箱"
-   - **验证通过后** → 点击"获取邮件列表"
-   - **查看邮件** → 点击邮件列表中的任意邮件查看详情
+## Docker 部署
 
-### 命令行模式
+### 使用 docker-compose（推荐）
 
-直接运行脚本测试配置：
 ```bash
-python mail_api.py
+# 构建并启动服务
+docker-compose up -d
+
+# 查看服务状态
+docker-compose ps
+
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
 ```
 
-## 功能特性
+### 使用自动化部署脚本
 
-### 1. 邮箱验证
-- 检查输入的邮箱是否在配置文件中存在
-- 实时验证反馈
+```bash
+# 赋予执行权限
+chmod +x deploy.sh
 
-### 2. 邮件列表
-- 获取最新的邮件列表（默认5封）
-- 显示邮件主题、发件人、时间和预览
-- 支持刷新功能
+# 构建镜像
+./deploy.sh build
 
-### 3. 邮件详情
-- 完整的邮件内容展示
-- 发件人、收件人、时间等详细信息
-- 安全的HTML内容处理
+# 启动服务
+./deploy.sh start
 
-### 4. 响应式设计
-- 适配桌面和移动设备
-- 现代化的Material Design界面
-- 流畅的交互体验
+# 查看状态
+./deploy.sh status
 
-## API接口
+# 查看日志
+./deploy.sh logs
 
-系统提供以下REST API接口：
-
-### 验证邮箱
-```
-POST /api/verify-email
-Content-Type: application/json
-
-{
-    "email": "user@example.com"
-}
+# 停止服务
+./deploy.sh stop
 ```
 
-### 获取邮件列表
-```
-GET /api/messages?email=user@example.com&top=5
-```
+## 使用方法
 
-### 获取邮件详情
-```
-GET /api/message/{message_id}?email=user@example.com
-```
+### Web 界面（推荐）
 
-## 错误排查
+1. 打开浏览器访问：http://localhost:5000
+2. 输入邮箱地址，点击"获取邮件"按钮
+3. 查看邮件列表，点击邮件查看详情
 
-### 常见问题
+### 管理界面
 
-1. **邮箱验证失败**
-   - 检查邮箱地址是否正确
-   - 确认邮箱在config.txt中存在
-   - 验证配置文件格式是否正确
+1. 访问：http://localhost:5000/admin
+2. 输入管理令牌（默认：admin123）
+3. 进行账户管理、批量导入导出等操作
 
-2. **获取邮件失败**
-   - 检查refresh_token是否有效
-   - 确认网络连接正常
-   - 查看控制台错误日志
+### 临时账户（手动输入账号信息）
 
-3. **服务器启动失败**
-   - 确认Flask依赖已正确安装
-   - 检查5000端口是否被占用
-   - 验证Python版本兼容性
+- 点击"临时账户"按钮
+- 输入临时邮箱凭据
+- 无需修改配置文件即可测试
 
-### 日志查看
+## 环境变量
 
-程序运行时会在控制台输出详细日志：
-- 邮箱验证状态
-- API请求响应
-- 错误信息和堆栈跟踪
+| 变量名 | 说明 | 默认值 |
+|--------|------|--------|
+| ADMIN_TOKEN | 管理页面访问令牌 | admin123 |
+| TZ | 时区设置 | Asia/Shanghai |
 
-## 安全注意事项
-
-1. **配置文件安全**
-   - config.txt包含敏感信息，请妥善保管
-   - 不要将包含真实凭据的配置文件上传到公共仓库
-
-2. **网络安全**
-   - 建议在内网环境使用
-   - 生产环境请使用HTTPS和正式的WSGI服务器
-
-3. **Token管理**
-   - 定期检查refresh_token的有效性
-   - 及时更新过期的凭据
-
-## 技术栈
-
-- **后端**: Python Flask
-- **前端**: HTML5 + Bootstrap 5 + JavaScript
-- **API**: Microsoft Graph API
-- **认证**: OAuth 2.0 with PKCE
-
-## 更新日志
-
-### v2.0.0 (当前版本)
-- ✅ 支持批量账户配置
-- ✅ 添加Web前端界面
-- ✅ 实现邮箱验证功能
-- ✅ 支持邮件列表和详情查看
-- ✅ 响应式设计
-- ✅ RESTful API接口
-
-### v1.0.0 (原版本)
-- 单账户配置
-- 命令行操作
-- 基础邮件收发功能
-
-## 许可证
-
-本项目基于MIT许可证开源。
-
-## 支持
-
-如有问题，请检查：
-1. 配置文件格式是否正确
-2. 依赖包是否完整安装
-3. 网络连接是否正常
-4. Microsoft Graph API权限是否正确配置
+## 注意事项
+- 仅能获取config中配置的邮件，否则会提示网络错误
+- 默认获取最近 5 封邮件
+- 管理页面需要令牌认证
+- 临时账户信息仅保存在浏览器会话中
+- 确保 config.txt 文件安全，包含敏感信息
