@@ -82,7 +82,7 @@ python mail_api.py
 - 实时验证反馈
 
 ### 2. 邮件列表
-- 获取最新的邮件列表（默认20封）
+- 获取最新的邮件列表（默认5封）
 - 显示邮件主题、发件人、时间和预览
 - 支持刷新功能
 
@@ -112,7 +112,7 @@ Content-Type: application/json
 
 ### 获取邮件列表
 ```
-GET /api/messages?email=user@example.com&top=20
+GET /api/messages?email=user@example.com&top=5
 ```
 
 ### 获取邮件详情

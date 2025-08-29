@@ -746,7 +746,23 @@ body {
     
     /* 移动端顶部邮件统计样式 */
     .mobile-email-stats {
-        /* 样式在顶部栏中定义 */
+        /* 确保在最右侧显示 */
+        margin-left: auto;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        min-width: fit-content;
+        flex-shrink: 0;
+    }
+    
+    .mobile-email-stats .d-flex {
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .mobile-email-stats .text-end {
+        text-align: right;
+        min-width: fit-content;
     }
     
     .mobile-sidebar-overlay {
@@ -814,6 +830,29 @@ body {
     .email-stats .badge {
         font-size: 10px;
         padding: 2px 6px;
+    }
+    
+    /* 移动端邮件统计信息在超小屏幕下的优化 */
+    .mobile-email-stats {
+        margin-left: auto !important;
+        margin-right: 0 !important;
+    }
+    
+    .mobile-email-stats .small {
+        font-size: 0.65rem !important;
+    }
+    
+    .mobile-email-stats .badge {
+        font-size: 0.6rem !important;
+        padding: 1px 4px !important;
+    }
+    
+    .mobile-email-stats #mobileRefreshBtn {
+        padding: 0.15rem 0.3rem !important;
+    }
+    
+    .mobile-email-stats #mobileRefreshBtn i {
+        font-size: 0.7rem !important;
     }
     
     /* 确保小屏幕下邮件详情能正常滚动 */

@@ -99,24 +99,6 @@
                         </div>
                     </div>
                     
-                    <!-- 移动端邮件统计信息 -->
-                    <div class="col-auto d-md-none">
-                        <div id="mobileEmailStats" class="mobile-email-stats" style="display: none;">
-                            <div class="d-flex align-items-center text-white">
-                                <div class="text-end me-2">
-                                    <div id="mobileCurrentEmailText" class="small fw-bold" style="font-size: 0.75rem;"></div>
-                                    <div class="d-flex align-items-center justify-content-end">
-                                        <span class="badge bg-light text-primary me-1" id="mobileTotalEmails">0</span>
-                                        <span class="small" style="font-size: 0.7rem;">封邮件</span>
-                                    </div>
-                                </div>
-                                <button class="btn btn-outline-light btn-sm" id="mobileRefreshBtn" style="display: none; padding: 0.2rem 0.4rem;">
-                                    <i class="bi bi-arrow-clockwise" style="font-size: 0.8rem;"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
                     <!-- 桌面端邮箱输入区域 -->
                     <div class="col d-none d-md-block">
                         <div class="email-input-section">
@@ -146,6 +128,24 @@
                                 <span class="badge bg-light text-primary ms-2" id="totalEmails">0</span>
                                 <button class="btn btn-outline-light btn-sm ms-2" id="refreshBtn" style="display: none;">
                                     <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 移动端邮件统计信息 - 移动到最右侧 -->
+                    <div class="col-auto d-md-none ms-auto">
+                        <div id="mobileEmailStats" class="mobile-email-stats" style="display: none;">
+                            <div class="d-flex align-items-center text-white">
+                                <div class="text-end me-2">
+                                    <div id="mobileCurrentEmailText" class="small fw-bold" style="font-size: 0.75rem;"></div>
+                                    <div class="d-flex align-items-center justify-content-end">
+                                        <span class="badge bg-light text-primary me-1" id="mobileTotalEmails">0</span>
+                                        <span class="small" style="font-size: 0.7rem;">封邮件</span>
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline-light btn-sm" id="mobileRefreshBtn" style="display: none; padding: 0.2rem 0.4rem;">
+                                    <i class="bi bi-arrow-clockwise" style="font-size: 0.8rem;"></i>
                                 </button>
                             </div>
                         </div>

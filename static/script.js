@@ -170,17 +170,30 @@ class EmailManager {
             desktopEmailInput.value = email;
         }
         
-        // 关闭侧边栏
-        this.closeMobileSidebar();
+        // 不关闭侧边栏，让用户可以继续操作
+        // this.closeMobileSidebar();
         
         // 更新当前邮箱
         this.currentEmail = email;
         
-        // 使用相同的加载逻辑
-        await this.loadEmails();
+        // 显示加载状态（主页和sidebar都显示）
+        this.showLoading();
         
-        // 更新移动端统计信息
-        this.updateMobileStats();
+        try {
+            // 使用相同的加载逻辑
+            await this.loadEmailsInternal(email);
+            
+            // 更新移动端统计信息
+            this.updateMobileStats();
+            
+            // 加载成功后可以选择关闭sidebar，或者让用户手动关闭
+            // 这里我们不自动关闭，让用户有更好的控制
+        } catch (error) {
+            // 错误处理
+            this.showError(error.message || '加载邮件失败');
+        } finally {
+            this.hideLoading();
+        }
     }
 
     setupModals() {
@@ -212,45 +225,50 @@ class EmailManager {
         this.showLoading();
         
         try {
-            let apiUrl = `/api/messages?email=${encodeURIComponent(email)}&top=20`;
-            let requestOptions = {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            };
-            
-            // 如果使用临时账户，添加临时账户信息到请求中
-            if (this.usingTempAccount && this.tempAccount && this.tempAccount.email === email) {
-                apiUrl = '/api/temp-messages';
-                requestOptions.method = 'POST';
-                requestOptions.body = JSON.stringify({
-                    email: this.tempAccount.email,
-                    password: this.tempAccount.password,
-                    client_id: this.tempAccount.client_id,
-                    refresh_token: this.tempAccount.refresh_token,
-                    top: 20
-                });
-            }
-            
-            const response = await fetch(apiUrl, requestOptions);
-            const result = await response.json();
-            
-            if (result.success) {
-                this.emails = result.data || [];
-                this.displayEmails();
-                this.updateStats();
-                this.showEmailInfo();
-            } else {
-                this.showError(result.message || '获取邮件失败');
-                this.hideEmailInfo();
-            }
+            await this.loadEmailsInternal(email);
         } catch (error) {
             console.error('Error loading emails:', error);
             this.showError('网络错误，请检查连接');
             this.hideEmailInfo();
         } finally {
             this.hideLoading();
+        }
+    }
+
+    async loadEmailsInternal(email) {
+        let apiUrl = `/api/messages?email=${encodeURIComponent(email)}&top=5`;
+        let requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+        
+        // 如果使用临时账户，添加临时账户信息到请求中
+        if (this.usingTempAccount && this.tempAccount && this.tempAccount.email === email) {
+            apiUrl = '/api/temp-messages';
+            requestOptions.method = 'POST';
+            requestOptions.body = JSON.stringify({
+                email: this.tempAccount.email,
+                password: this.tempAccount.password,
+                client_id: this.tempAccount.client_id,
+                refresh_token: this.tempAccount.refresh_token,
+                top: 5
+            });
+        }
+        
+        const response = await fetch(apiUrl, requestOptions);
+        const result = await response.json();
+        
+        if (result.success) {
+            this.emails = result.data || [];
+            this.displayEmails();
+            this.updateStats();
+            this.showEmailInfo();
+        } else {
+            this.showError(result.message || '获取邮件失败');
+            this.hideEmailInfo();
+            throw new Error(result.message || '获取邮件失败');
         }
     }
 
@@ -1148,15 +1166,17 @@ class EmailManager {
             }));
             
             // 执行导入
+            const importData = {
+                accounts: accounts,
+                merge_mode: mode
+            };
+            
             const importResponse = await fetch('/api/import', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    accounts: accounts,
-                    merge_mode: mode
-                })
+                body: JSON.stringify(importData)
             });
             
             const importResult = await importResponse.json();
@@ -1428,24 +1448,25 @@ class EmailManager {
     async exportAccounts(format) {
         try {
             const response = await fetch(`/api/export?format=${format}`);
-            const result = await response.json();
             
-            if (result.success) {
-                if (format === 'json') {
-                    // JSON导出
-                    const dataStr = JSON.stringify(result.data, null, 2);
-                    const filename = `accounts_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.json`;
-                    this.downloadFile(dataStr, filename, 'application/json');
-                } else {
-                    // TXT导出
-                    const content = result.data.content;
-                    const filename = result.data.filename;
-                    this.downloadFile(content, filename, 'text/plain');
+            if (response.ok) {
+                // 所有格式都直接获取文本内容（后端已统一返回PlainTextResponse）
+                const content = await response.text();
+                
+                // 从响应头获取文件名
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = 'accounts_export.txt';
+                if (contentDisposition) {
+                    const match = contentDisposition.match(/filename=(.+)/);
+                    if (match) {
+                        filename = match[1];
+                    }
                 }
                 
-                this.showSuccess(result.message);
+                this.downloadFile(content, filename, 'text/plain');
+                this.showSuccess('导出成功');
             } else {
-                this.showError(result.message || '导出失败');
+                this.showError(`导出失败: HTTP ${response.status}`);
             }
             
         } catch (error) {

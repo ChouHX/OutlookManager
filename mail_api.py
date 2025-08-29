@@ -26,10 +26,11 @@ from contextlib import asynccontextmanager
 import httpx
 from fastapi import FastAPI, HTTPException, Request, Depends, Header
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, EmailStr
+from fastapi.exceptions import RequestValidationError
+from pydantic import BaseModel, EmailStr, ValidationError
 
 # 移除代理相关代码，以兼容Docker环境
 
@@ -42,7 +43,7 @@ class EmailVerifyRequest(BaseModel):
 
 class EmailListRequest(BaseModel):
     email: EmailStr
-    top: int = 20
+    top: int = 5
 
 class EmailDetailRequest(BaseModel):
     email: EmailStr
@@ -51,7 +52,7 @@ class EmailDetailRequest(BaseModel):
 class ApiResponse(BaseModel):
     success: bool
     message: str = ""
-    data: Optional[Union[Dict, List]] = None
+    data: Optional[Union[Dict, List, str]] = None
 
 class AccountCredentials(BaseModel):
     email: EmailStr
@@ -61,7 +62,7 @@ class AccountCredentials(BaseModel):
 
 class ImportAccountData(BaseModel):
     """单个导入账户数据模型"""
-    email: EmailStr
+    email: str  # 暂时使用str而不EmailStr避免验证问题
     password: str = ""
     client_id: str = ""
     refresh_token: str
@@ -70,6 +71,14 @@ class ImportRequest(BaseModel):
     """批量导入请求模型"""
     accounts: List[ImportAccountData]
     merge_mode: str = "update"  # "update": 更新现有账户, "skip": 跳过重复账户, "replace": 替换所有数据
+
+class ParsedImportRequest(BaseModel):
+    """解析后的导入请求模型（包含解析统计信息）"""
+    accounts: List[ImportAccountData]
+    parsed_count: int
+    error_count: int
+    errors: List[str]
+    merge_mode: str = "update"
 
 class ImportResult(BaseModel):
     """导入结果模型"""
@@ -96,7 +105,7 @@ class TempAccountRequest(BaseModel):
     password: str = ""
     client_id: str = ""
     refresh_token: str
-    top: int = 20
+    top: int = 5
 
 class TempMessageDetailRequest(BaseModel):
     """临时账户邮件详情请求"""
@@ -533,7 +542,7 @@ class EmailClient:
                 logger.debug(f"关闭IMAP连接时发生预期错误 ({self.email}): {e}")
                 # 这些错误是正常的，不需要记录为ERROR级别
 
-    async def get_messages(self, folder_id: str = INBOX_FOLDER_NAME, top: int = 10) -> List[Dict]:
+    async def get_messages(self, folder_id: str = INBOX_FOLDER_NAME, top: int = 5) -> List[Dict]:
         """获取指定文件夹的邮件（使用IMAP协议，按需连接模式）
         
         Args:
@@ -805,7 +814,7 @@ class EmailManager:
         accounts = await load_accounts_config()
         return email in accounts
     
-    async def get_messages(self, email: str, top: int = 10) -> List[Dict]:
+    async def get_messages(self, email: str, top: int = 5) -> List[Dict]:
         """获取指定邮箱的邮件列表"""
         client = await self.get_client(email)
         if not client:
@@ -884,6 +893,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 添加验证错误处理器
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    logger.error(f"Pydantic验证错误: {exc}")
+    logger.error(f"请求路径: {request.url}")
+    logger.error(f"请求方法: {request.method}")
+    try:
+        body = await request.body()
+        logger.error(f"请求数据: {body.decode('utf-8')}")
+    except:
+        logger.error("无法读取请求数据")
+    
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors(), "message": "数据验证失败"}
+    )
+
 # 挂载静态文件服务
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -898,13 +924,23 @@ async def root():
 # CSS和JS文件的直接路由
 @app.get("/style.css")
 async def style_css():
-    """CSS文件"""
-    return FileResponse("static/style.css")
+    """CSS文件 - 带缓存控制"""
+    response = FileResponse("static/style.css")
+    # 禁止缓存，确保浏览器获取最新样式
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 @app.get("/script.js")
 async def script_js():
-    """JavaScript文件"""
-    return FileResponse("static/script.js")
+    """JavaScript文件 - 带缓存控制"""
+    response = FileResponse("static/script.js")
+    # 禁止缓存，确保浏览器获取最新的JavaScript代码
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 @app.get("/admin")
 async def admin_page():
@@ -913,11 +949,21 @@ async def admin_page():
 
 @app.get("/admin.js")
 async def admin_js():
+    """管理页面JavaScript文件 - 带缓存控制"""
+    response = FileResponse("static/admin.js")
+    # 禁止缓存，确保浏览器获取最新的JavaScript代码
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+@app.get("/admin.js")
+async def admin_js():
     """管理页面JavaScript文件"""
     return FileResponse("static/admin.js")
 
 @app.get("/api/messages")
-async def get_messages(email: str, top: int = 20) -> ApiResponse:
+async def get_messages(email: str, top: int = 5) -> ApiResponse:
     """获取邮件列表"""
     email = email.strip()
     
@@ -1041,14 +1087,81 @@ async def get_accounts(authorization: Optional[str] = Header(None)) -> ApiRespon
         return ApiResponse(success=False, message="获取账户列表失败")
 
 @app.post("/api/import")
-async def import_accounts(request: ImportRequest) -> ImportResult:
-    """批量导入邮箱账户"""
+async def import_accounts_dict(request_data: dict) -> dict:
+    """批量导入邮箱账户（使用简单字典格式）"""
     try:
+        logger.info(f"完整请求数据: {request_data}")
+        
+        accounts_data = request_data.get('accounts', [])
+        merge_mode = request_data.get('merge_mode', 'update')
+        
+        logger.info(f"收到导入请求，账户数量: {len(accounts_data) if isinstance(accounts_data, (list, dict)) else 'N/A'}, 合并模式: {merge_mode}")
+        logger.info(f"原始请求数据类型: {type(request_data)}")
+        logger.info(f"账户数据类型: {type(accounts_data)}")
+        logger.info(f"账户数据内容: {accounts_data}")
+        
+        # 检查accounts_data是否是字典而不是列表
+        if isinstance(accounts_data, dict):
+            logger.error(f"账户数据是字典而不是列表: {accounts_data}")
+            # 如果accounts_data是解析结果字典，尝试提取accounts字段
+            if 'accounts' in accounts_data:
+                logger.info("发现嵌套的accounts字段，正在提取...")
+                accounts_data = accounts_data['accounts']
+                logger.info(f"提取后的账户数据类型: {type(accounts_data)}, 内容: {accounts_data}")
+            else:
+                return {
+                    "success": False,
+                    "total_count": 0,
+                    "added_count": 0,
+                    "updated_count": 0,
+                    "skipped_count": 0,
+                    "error_count": 0,
+                    "details": [{"action": "error", "message": "账户数据格式错误：应该是数组"}],
+                    "message": "账户数据格式错误：应该是数组"
+                }
+        
+        if len(accounts_data) > 0:
+            logger.info(f"第一个账户数据类型: {type(accounts_data[0])}, 内容: {accounts_data[0]}")
+        
+        # 确保accounts_data是列表
+        if not isinstance(accounts_data, list):
+            return {
+                "success": False,
+                "total_count": 0,
+                "added_count": 0,
+                "updated_count": 0,
+                "skipped_count": 0,
+                "error_count": 1,
+                "details": [{"action": "error", "message": f"账户数据类型错误: {type(accounts_data)}, 应该是数组"}],
+                "message": f"账户数据类型错误: {type(accounts_data)}, 应该是数组"
+            }
+        
+        # 转换为 ImportAccountData 对象
+        accounts = []
+        for i, acc_data in enumerate(accounts_data):
+            try:
+                logger.info(f"处理第{i+1}个账户: {acc_data} (类型: {type(acc_data)})")
+                
+                if isinstance(acc_data, str):
+                    logger.error(f"账户数据是字符串而不是字典: {acc_data}")
+                    continue
+                
+                account = ImportAccountData(
+                    email=acc_data.get('email', ''),
+                    password=acc_data.get('password', ''),
+                    client_id=acc_data.get('client_id', ''),
+                    refresh_token=acc_data.get('refresh_token', '')
+                )
+                accounts.append(account)
+            except Exception as e:
+                logger.error(f"转换账户数据失败: {acc_data}, 错误: {e}")
+                continue
+        
         # 加载现有账户
         existing_accounts = await load_accounts_config()
         
         # 合并数据
-        result = await merge_accounts_data(existing_accounts, request.accounts, request.merge_mode)
+        result = await merge_accounts_data(existing_accounts, accounts, merge_mode)
         
         # 保存更新后的数据
         if result.success and (result.added_count > 0 or result.updated_count > 0):
@@ -1056,21 +1169,31 @@ async def import_accounts(request: ImportRequest) -> ImportResult:
             if not save_success:
                 result.success = False
                 result.message += "，但保存文件失败"
-                
-        return result
+        
+        # 返回结果字典
+        return {
+            "success": result.success,
+            "total_count": result.total_count,
+            "added_count": result.added_count,
+            "updated_count": result.updated_count,
+            "skipped_count": result.skipped_count,
+            "error_count": result.error_count,
+            "details": result.details,
+            "message": result.message
+        }
         
     except Exception as e:
         logger.error(f"导入账户失败: {e}")
-        return ImportResult(
-            success=False,
-            total_count=len(request.accounts) if hasattr(request, 'accounts') else 0,
-            added_count=0,
-            updated_count=0,
-            skipped_count=0,
-            error_count=len(request.accounts) if hasattr(request, 'accounts') else 0,
-            details=[{"action": "error", "message": f"系统错误: {str(e)}"}],
-            message=f"导入失败: {str(e)}"
-        )
+        return {
+            "success": False,
+            "total_count": len(request_data.get('accounts', [])),
+            "added_count": 0,
+            "updated_count": 0,
+            "skipped_count": 0,
+            "error_count": len(request_data.get('accounts', [])),
+            "details": [{"action": "error", "message": f"系统错误: {str(e)}"}],
+            "message": f"导入失败: {str(e)}"
+        }
 
 # ============================================================================
 # 管理API端点
@@ -1122,22 +1245,22 @@ async def delete_account(request: DeleteAccountRequest, token: str = Depends(get
         logger.error(f"删除账户失败: {e}")
         return ApiResponse(success=False, message=f"删除失败: {str(e)}")
 
-@app.get("/api/admin/export")
-async def export_accounts(token: str = Depends(get_admin_token)) -> ApiResponse:
-    """导出账户配置（包含完整信息）"""
+@app.get("/api/export")
+async def export_accounts_public(format: str = "txt"):
+    """公开导出账户配置（不需要令牌）"""
     try:
         # 加载现有账户
         accounts = await load_accounts_config()
         
         if not accounts:
-            return ApiResponse(success=False, message="暂无账户数据")
+            raise HTTPException(status_code=404, detail="暂无账户数据")
         
         # 生成导出内容
         export_lines = []
         export_lines.append("# Outlook邮件系统账号配置文件")
         export_lines.append(f"# 导出时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         export_lines.append("# 格式: 邮箱----密码----client_id----refresh_token")
-        export_lines.append("# 注意：请妄善保管此文件，包含敏感信息")
+        export_lines.append("# 注意：请妥善保管此文件，包含敏感信息")
         export_lines.append("")
         
         # 添加账户数据
@@ -1150,15 +1273,63 @@ async def export_accounts(token: str = Depends(get_admin_token)) -> ApiResponse:
         
         export_content = "\n".join(export_lines)
         
-        return ApiResponse(
-            success=True, 
-            data=export_content,
-            message=f"成功导出 {len(accounts)} 个账户的完整配置"
+        # 设置响应头，让浏览器下载文件
+        filename = f"outlook_accounts_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        
+        return PlainTextResponse(
+            content=export_content,
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Content-Type": "text/plain; charset=utf-8"
+            }
         )
         
     except Exception as e:
         logger.error(f"导出账户配置失败: {e}")
-        return ApiResponse(success=False, message=f"导出失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"导出失败: {str(e)}")
+
+@app.get("/api/admin/export")
+async def export_accounts(token: str = Depends(get_admin_token)):
+    """导出账户配置（纯文本格式）"""
+    try:
+        # 加载现有账户
+        accounts = await load_accounts_config()
+        
+        if not accounts:
+            raise HTTPException(status_code=404, detail="暂无账户数据")
+        
+        # 生成导出内容
+        export_lines = []
+        export_lines.append("# Outlook邮件系统账号配置文件")
+        export_lines.append(f"# 导出时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        export_lines.append("# 格式: 邮箱----密码----client_id----refresh_token")
+        export_lines.append("# 注意：请妥善保管此文件，包含敏感信息")
+        export_lines.append("")
+        
+        # 添加账户数据
+        for email, account_info in accounts.items():
+            password = account_info.get('password', '')
+            refresh_token = account_info.get('refresh_token', '')
+            # 使用全局CLIENT_ID
+            line = f"{email}----{password}----{CLIENT_ID}----{refresh_token}"
+            export_lines.append(line)
+        
+        export_content = "\n".join(export_lines)
+        
+        # 设置响应头，让浏览器下载文件
+        filename = f"outlook_accounts_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        
+        return PlainTextResponse(
+            content=export_content,
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Content-Type": "text/plain; charset=utf-8"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"导出账户配置失败: {e}")
+        raise HTTPException(status_code=500, detail=f"导出失败: {str(e)}")
 
 @app.post("/api/parse-import-text")
 async def parse_import_text(request: dict) -> ApiResponse:

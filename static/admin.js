@@ -304,7 +304,7 @@ class AdminManager {
                     'Authorization': `Bearer ${this.token}`
                 },
                 body: JSON.stringify({
-                    accounts: parseResult.data,
+                    accounts: parseResult.data.accounts,  // 只提取accounts数组
                     merge_mode: mergeMode.value
                 })
             });
@@ -339,14 +339,22 @@ class AdminManager {
             });
 
             if (response.ok) {
-                const result = await response.json();
-                if (result.success) {
-                    // 直接下载完整的导出数据
-                    this.downloadTextFile(result.data, 'outlook_accounts_config.txt');
-                    this.showSuccess('数据导出成功，包含完整配置信息');
-                } else {
-                    throw new Error(result.message);
+                // 直接获取文本内容
+                const content = await response.text();
+                
+                // 从响应头获取文件名
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = 'outlook_accounts_config.txt';
+                if (contentDisposition) {
+                    const match = contentDisposition.match(/filename=(.+)/);
+                    if (match) {
+                        filename = match[1];
+                    }
                 }
+                
+                // 下载文件
+                this.downloadTextFile(content, filename);
+                this.showSuccess('数据导出成功，包含完整配置信息');
             } else {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
