@@ -21,6 +21,7 @@
 │   ├── script.js           # 主页面脚本
 │   └── style.css           # 样式文件
 ├── config.txt              # 邮箱账户配置文件
+├── .env.example            # 环境变量配置示例文件
 ├── mail_api.py             # 主程序文件
 ├── get_refresh_token.py    # 获取刷新令牌工具
 ├── requirements.txt        # Python依赖包
@@ -129,10 +130,16 @@ chmod +x deploy.sh
 
 ## 环境变量
 
+项目支持通过环境变量进行配置，可以复制 `.env.example` 文件为 `.env` 并修改相应配置：
+
 | 变量名 | 说明 | 默认值 |
 |--------|------|--------|
 | ADMIN_TOKEN | 管理页面访问令牌 | admin123 |
+| SERVER_PORT | 服务器端口 | 5000 |
+| SERVER_HOST | 服务器主机地址 | 0.0.0.0 |
 | TZ | 时区设置 | Asia/Shanghai |
+| LOG_LEVEL | 日志级别（DEBUG, INFO, WARNING, ERROR, CRITICAL） | INFO |
+| VERBOSE_LOGGING | 是否启用详细日志 | false |
 
 ## 注意事项
 - 仅能获取config中配置的邮件，否则会提示网络错误
